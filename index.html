@@ -1,0 +1,1080 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Warung Eja OS | Sistem Manajemen Sembako</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <style>
+        /* CSS Variables & Theming System */
+        :root {
+            --font-sans: 'Inter', sans-serif;
+            --brand-primary: #4f46e5;
+            --brand-secondary: #3730a3;
+            --brand-accent: #10b981;
+            --brand-danger: #ef4444;
+            --brand-warning: #f59e0b;
+            --bg-base: #f8fafc;
+            --bg-surface: #ffffff;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --sidebar-bg: #020617;
+            --sidebar-hover: rgba(255, 255, 255, 0.05);
+            --shadow-subtle: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+            --shadow-float: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            --radius-sm: 0.375rem;
+            --radius-md: 0.75rem;
+            --radius-lg: 1.5rem;
+            --radius-xl: 2.5rem;
+            --transition-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
+            --transition-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Base Resets & Typography */
+        *, *::before, *::after { box-sizing: border-box; }
+        html { font-size: 16px; scroll-behavior: smooth; }
+        body { font-family: var(--font-sans); background-color: var(--bg-base); color: var(--text-main); margin: 0; overflow-x: hidden; -webkit-font-smoothing: antialiased; }
+        
+        /* Advanced Scrollbar Styling */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: var(--bg-base); }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: var(--radius-xl); border: 2px solid var(--bg-base); }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        /* Animation Keyframes Library */
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
+        @keyframes slideUpFade { from { opacity: 0; transform: translateY(40px) scale(0.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
+        @keyframes slideDownFade { from { opacity: 0; transform: translateY(-40px) scale(0.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
+        @keyframes slideRight { from { opacity: 0; transform: translateX(-30px); } to { opacity: 1; transform: translateX(0); } }
+        @keyframes scaleIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
+        @keyframes pulseGlow { 0% { box-shadow: 0 0 0 0 rgba(79, 70, 229, 0.4); } 70% { box-shadow: 0 0 0 15px rgba(79, 70, 229, 0); } 100% { box-shadow: 0 0 0 0 rgba(79, 70, 229, 0); } }
+        @keyframes spinSlow { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        @keyframes shimmer { 0% { background-position: -1000px 0; } 100% { background-position: 1000px 0; } }
+
+        /* Utility Classes for JS Injection */
+        .anim-slide-up { animation: slideUpFade 0.7s var(--transition-bounce) forwards; }
+        .anim-scale-in { animation: scaleIn 0.5s var(--transition-smooth) forwards; }
+        .anim-fade-in { animation: fadeIn 0.4s ease forwards; }
+        .anim-slide-right { animation: slideRight 0.5s var(--transition-smooth) forwards; }
+        
+        /* Component Specific Styles */
+        .glass-panel { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); border: 1px solid rgba(255, 255, 255, 0.4); }
+        .sidebar-link { transition: all 0.3s var(--transition-smooth); position: relative; overflow: hidden; }
+        .sidebar-link::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: var(--brand-primary); transform: scaleY(0); transition: transform 0.3s ease; transform-origin: left; }
+        .sidebar-link.active { background: linear-gradient(90deg, rgba(79,70,229,0.15) 0%, transparent 100%); color: white; }
+        .sidebar-link.active::before { transform: scaleY(1); }
+        .sidebar-link:hover:not(.active) { background: var(--sidebar-hover); color: white; }
+        
+        .kpi-card { transition: all 0.4s var(--transition-bounce); }
+        .kpi-card:hover { transform: translateY(-8px); box-shadow: var(--shadow-float); border-color: rgba(79, 70, 229, 0.3); }
+        .kpi-icon-wrap { transition: transform 0.5s var(--transition-bounce); }
+        .kpi-card:hover .kpi-icon-wrap { transform: scale(1.15) rotate(5deg); }
+
+        .data-table th { background: #f8fafc; text-transform: uppercase; letter-spacing: 0.05em; font-size: 0.7rem; font-weight: 800; color: var(--text-muted); padding: 1rem; position: sticky; top: 0; z-index: 10; }
+        .data-table tr { transition: background 0.2s ease; border-bottom: 1px solid #f1f5f9; }
+        .data-table tr:hover { background: #f8fafc; }
+        .data-table td { padding: 1rem; font-size: 0.875rem; vertical-align: middle; }
+
+        /* Loader & Overlays */
+        #splash-screen { position: fixed; inset: 0; background: var(--bg-surface); z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: opacity 0.8s ease, visibility 0.8s; }
+        .spinner-ring { width: 80px; height: 80px; border: 4px solid #f1f5f9; border-top-color: var(--brand-primary); border-radius: 50%; animation: spinSlow 1s linear infinite; }
+        
+        /* Interactive Input Elements */
+        .form-input { width: 100%; padding: 1rem 1.25rem; background: var(--bg-base); border: 2px solid transparent; border-radius: var(--radius-lg); font-size: 0.875rem; color: var(--text-main); font-weight: 600; transition: all 0.3s ease; outline: none; }
+        .form-input:focus { border-color: var(--brand-primary); background: var(--bg-surface); box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1); }
+        .form-label { display: block; font-size: 0.7rem; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.5rem; }
+
+        @media (max-width: 768px) { .sidebar-container { transform: translateX(-100%); position: absolute; } }
+    </style>
+</head>
+<body class="antialiased selection:bg-indigo-500 selection:text-white">
+
+    <div id="splash-screen">
+        <div class="relative flex items-center justify-center">
+            <div class="spinner-ring absolute"></div>
+            <i class="fas fa-store text-2xl text-indigo-600 animate-pulse"></i>
+        </div>
+        <h1 class="mt-8 text-3xl font-black tracking-tighter text-slate-800">WARUNG EJA<span class="text-indigo-600">.AI</span></h1>
+        <p class="mt-2 text-xs font-bold text-slate-400 uppercase tracking-[0.3em]">Initializing Sembako System</p>
+        <div class="w-64 h-1 bg-slate-100 rounded-full mt-6 overflow-hidden">
+            <div id="splash-progress" class="h-full bg-indigo-600 w-0 transition-all duration-300 ease-out"></div>
+        </div>
+        <p id="splash-text" class="mt-4 text-[10px] font-mono text-slate-400">Loading Core Modules...</p>
+    </div>
+
+    <div id="app-wrapper" class="flex min-h-screen opacity-0 w-full overflow-hidden">
+        
+        <aside class="w-[280px] bg-sidebar-bg text-slate-300 flex flex-col h-screen sticky top-0 border-r border-slate-800/50 z-50 sidebar-container shrink-0 shadow-2xl">
+            <div class="p-8 flex items-center gap-4">
+                <div class="w-12 h-12 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-500/30">
+                    <i class="fas fa-store text-xl text-white"></i>
+                </div>
+                <div class="flex flex-col">
+                    <span class="text-xl font-black text-white tracking-tighter leading-tight">Warung Eja</span>
+                    <span class="text-[9px] font-bold text-indigo-400 uppercase tracking-widest">Sembako OS</span>
+                </div>
+            </div>
+
+            <div class="flex-1 overflow-y-auto custom-scroll px-4 space-y-8 pb-8">
+                <div id="nav-container"></div>
+            </div>
+
+            <div class="p-4 mt-auto border-t border-slate-800/50">
+                <div class="p-4 rounded-2xl bg-white/5 border border-white/10 flex items-center gap-3 cursor-pointer hover:bg-white/10 transition-colors">
+                    <div class="relative">
+                        <img src="https://ui-avatars.com/api/?name=Juragan+Eja&background=6366f1&color=fff" class="w-10 h-10 rounded-full border-2 border-slate-700" alt="Profile">
+                        <div class="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 border-2 border-slate-900 rounded-full"></div>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <p class="text-sm font-bold text-white truncate">Juragan Eja</p>
+                        <p class="text-[10px] text-slate-400 truncate">Pemilik Warung</p>
+                    </div>
+                    <i class="fas fa-chevron-right text-xs text-slate-500"></i>
+                </div>
+            </div>
+        </aside>
+
+        <main class="flex-1 flex flex-col min-w-0 bg-[#f8fafc] h-screen overflow-hidden">
+            
+            <header class="h-[88px] glass-panel flex items-center justify-between px-10 sticky top-0 z-40 shrink-0">
+                <div class="flex items-center gap-6">
+                    <button id="mobile-toggle" class="lg:hidden text-slate-400 hover:text-indigo-600"><i class="fas fa-bars text-xl"></i></button>
+                    <div>
+                        <h2 id="page-title" class="text-2xl font-black text-slate-800 tracking-tight capitalize">Dashboard</h2>
+                        <div class="flex items-center gap-2 mt-1">
+                            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest" id="page-subtitle">Sinkronisasi Data Kasir Live</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-4">
+                    <div class="relative hidden md:block">
+                        <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                        <input type="text" placeholder="Cari barang, transaksi..." class="w-72 pl-11 pr-4 py-2.5 bg-slate-100 border-none rounded-full text-sm font-semibold outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
+                    </div>
+
+                    <div class="h-8 w-[1px] bg-slate-200 mx-2 hidden sm:block"></div>
+
+                    <button class="w-10 h-10 rounded-full border border-slate-200 flex items-center justify-center text-slate-500 hover:bg-slate-50 hover:text-indigo-600 transition relative">
+                        <i class="fas fa-bell"></i>
+                        <span class="absolute top-0 right-0 w-3 h-3 bg-red-500 border-2 border-white rounded-full"></span>
+                    </button>
+                    
+                    <button onclick="Core.UI.Modal.open('new_transaction')" class="bg-indigo-600 text-white px-5 py-2.5 rounded-full font-bold text-sm shadow-lg shadow-indigo-200 hover:bg-indigo-700 hover:scale-105 active:scale-95 transition-all flex items-center gap-2">
+                        <i class="fas fa-calculator"></i> <span class="hidden sm:inline">Kasir Baru</span>
+                    </button>
+                </div>
+            </header>
+
+            <div id="router-view" class="flex-1 overflow-y-auto custom-scroll p-6 lg:p-10 scroll-smooth relative">
+            </div>
+        </main>
+    </div>
+
+    <div id="modal-root" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[100] hidden items-center justify-center p-4 sm:p-6 opacity-0 transition-opacity duration-300">
+        <div id="modal-body" class="bg-white w-full max-w-3xl rounded-[32px] shadow-2xl overflow-hidden transform scale-95 transition-transform duration-300 flex flex-col max-h-[90vh]">
+        </div>
+    </div>
+
+    <div id="toast-root" class="fixed bottom-6 right-6 z-[200] flex flex-col gap-3 pointer-events-none w-80"></div>
+
+    <script>
+        "use strict";
+
+        // -----------------------------------------------------------------------------
+        // MODULE 1: UTILITIES & HELPERS
+        // -----------------------------------------------------------------------------
+        const Utils = {
+            formatIDR: (number) => {
+                if (isNaN(number) || number === null) return "Rp 0";
+                return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(number);
+            },
+            formatCompact: (number) => {
+                return new Intl.NumberFormat('id-ID', { notation: "compact", compactDisplay: "short" }).format(number);
+            },
+            formatDate: (dateString) => {
+                const options = { day: '2-digit', month: 'short', year: 'numeric' };
+                return new Date(dateString).toLocaleDateString('id-ID', options);
+            },
+            generateUUID: () => {
+                return ([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g, c =>
+                    (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16)
+                );
+            },
+            calcGrowth: (current, previous) => {
+                if (previous === 0) return current > 0 ? 100 : 0;
+                return ((current - previous) / previous) * 100;
+            },
+            createElement: (tag, classes = '', innerHTML = '') => {
+                const el = document.createElement(tag);
+                if (classes) el.className = classes;
+                if (innerHTML) el.innerHTML = innerHTML;
+                return el;
+            },
+            sleep: (ms) => new Promise(resolve => setTimeout(resolve, ms))
+        };
+
+        // -----------------------------------------------------------------------------
+        // MODULE 2: ADVANCED MATHEMATICS & AI ENGINE
+        // -----------------------------------------------------------------------------
+        const AIEngine = {
+            linearRegression: (data, horizon = 7) => {
+                const n = data.length;
+                if (n < 2) return { forecast: Array(horizon).fill(0), slope: 0, intercept: 0, rSquared: 0 };
+
+                let sumX = 0, sumY = 0, sumXY = 0, sumX2 = 0, sumY2 = 0;
+                for (let i = 0; i < n; i++) {
+                    sumX += i; sumY += data[i]; sumXY += i * data[i]; sumX2 += i * i; sumY2 += data[i] * data[i];
+                }
+
+                const denominator = (n * sumX2 - sumX * sumX);
+                if (denominator === 0) return { forecast: Array(horizon).fill(data[0]), slope: 0, intercept: data[0], rSquared: 0 };
+
+                const slope = (n * sumXY - sumX * sumY) / denominator;
+                const intercept = (sumY - slope * sumX) / n;
+
+                const meanY = sumY / n;
+                let ssTot = 0, ssRes = 0;
+                for (let i = 0; i < n; i++) {
+                    const yPred = intercept + slope * i;
+                    ssTot += Math.pow(data[i] - meanY, 2);
+                    ssRes += Math.pow(data[i] - yPred, 2);
+                }
+                const rSquared = ssTot === 0 ? 1 : 1 - (ssRes / ssTot);
+
+                const forecast = [];
+                for (let i = 0; i < horizon; i++) {
+                    let val = intercept + slope * (n + i);
+                    forecast.push(Math.max(0, Math.round(val)));
+                }
+
+                return { forecast, slope, intercept, rSquared: (rSquared * 100).toFixed(1) };
+            },
+
+            segmentCustomers: (customers, k = 3) => {
+                if (customers.length < k) return customers.map(c => ({...c, segment: 'Uncategorized'}));
+                
+                let data = customers.map(c => c.totalSpend);
+                let centroids = [];
+                let sortedData = [...new Set(data)].sort((a,b)=>a-b);
+                if(sortedData.length < k) k = sortedData.length;
+                
+                for(let i=0; i<k; i++) centroids.push(sortedData[Math.floor(i * (sortedData.length / k))]);
+
+                let assignments = new Array(data.length).fill(-1);
+                let changed = true;
+                let maxIter = 50;
+
+                while (changed && maxIter > 0) {
+                    changed = false; maxIter--;
+
+                    for (let i = 0; i < data.length; i++) {
+                        let minVal = Infinity, clusterIdx = 0;
+                        for (let j = 0; j < k; j++) {
+                            let dist = Math.abs(data[i] - centroids[j]);
+                            if (dist < minVal) { minVal = dist; clusterIdx = j; }
+                        }
+                        if (assignments[i] !== clusterIdx) { assignments[i] = clusterIdx; changed = true; }
+                    }
+
+                    let newCentroids = new Array(k).fill(0), counts = new Array(k).fill(0);
+                    for (let i = 0; i < data.length; i++) {
+                        let cIdx = assignments[i]; newCentroids[cIdx] += data[i]; counts[cIdx]++;
+                    }
+                    for (let j = 0; j < k; j++) {
+                        if (counts[j] > 0) centroids[j] = newCentroids[j] / counts[j];
+                    }
+                }
+
+                let centroidMap = centroids.map((val, idx) => ({val, idx})).sort((a,b) => a.val - b.val);
+                let labels = ['Jarang Belanja', 'Pelanggan Biasa', 'Juragan (Sering Hutang/Borong)'];
+                
+                let rankMap = {};
+                centroidMap.forEach((c, rank) => { rankMap[c.idx] = labels[Math.min(rank, labels.length-1)]; });
+
+                return customers.map((c, i) => ({ ...c, segment: rankMap[assignments[i]] }));
+            }
+        };
+
+        // -----------------------------------------------------------------------------
+        // MODULE 3: DATA PERSISTENCE & MOCK SEEDING (Sembako Adjusted)
+        // -----------------------------------------------------------------------------
+        const Database = {
+            STORAGE_KEY: 'WARUNG_EJA_DB_V1', // New key to reset old high-number data
+            schema: {
+                metadata: { lastUpdated: null, version: '1.0.0' },
+                products: [],
+                categories: [],
+                customers: [],
+                transactions: [],
+                settings: { theme: 'light', currency: 'IDR', taxRate: 0 } // Warung sembako doesn't explicitly charge tax
+            },
+
+            async init() {
+                try {
+                    const localData = localStorage.getItem(this.STORAGE_KEY);
+                    if (localData) {
+                        const parsed = JSON.parse(localData);
+                        this.schema = { ...this.schema, ...parsed };
+                    } 
+                    
+                    if (this.schema.products.length === 0 || this.schema.transactions.length === 0) {
+                        console.warn("Local DB Empty. Injecting Sembako Seed Data...");
+                        this.injectSeedData();
+                        this.save();
+                    }
+                    return true;
+                } catch (error) {
+                    console.error("Database Initialization Failed:", error);
+                    return false;
+                }
+            },
+
+            save() {
+                this.schema.metadata.lastUpdated = new Date().toISOString();
+                localStorage.setItem(this.STORAGE_KEY, JSON.stringify(this.schema));
+            },
+
+            injectSeedData() {
+                // 1. Categories Seed
+                this.schema.categories = [
+                    { id: 'cat_1', name: 'Sembako Utama', type: 'Goods' },
+                    { id: 'cat_2', name: 'Makanan & Minuman', type: 'Goods' },
+                    { id: 'cat_3', name: 'Bumbu Dapur', type: 'Goods' },
+                    { id: 'cat_4', name: 'Kebutuhan Mandi & Cuci', type: 'Goods' }
+                ];
+
+                // 2. Products Seed (Warung Sembako realistic prices and margins ~10-20%)
+                this.schema.products = [
+                    { id: 'prd_1', catId: 'cat_1', name: 'Beras Setra Ramos 1L', price: 13500, cost: 11500, stock: 80, status: 'active' },
+                    { id: 'prd_2', catId: 'cat_1', name: 'Minyak Goreng Curah 1kg', price: 16500, cost: 15000, stock: 45, status: 'active' },
+                    { id: 'prd_3', catId: 'cat_1', name: 'Gula Pasir Lokal 1kg', price: 17000, cost: 15500, stock: 30, status: 'active' },
+                    { id: 'prd_4', catId: 'cat_2', name: 'Indomie Goreng Special', price: 3500, cost: 2800, stock: 150, status: 'active' },
+                    { id: 'prd_5', catId: 'cat_2', name: 'Kopi Kapal Api Mix (Renceng)', price: 15000, cost: 12500, stock: 15, status: 'warning' },
+                    { id: 'prd_6', catId: 'cat_2', name: 'Teh Pucuk Harum 350ml', price: 4000, cost: 3100, stock: 60, status: 'active' },
+                    { id: 'prd_7', catId: 'cat_3', name: 'Telur Ayam Negeri 1/2kg', price: 14500, cost: 13000, stock: 18, status: 'warning' },
+                    { id: 'prd_8', catId: 'cat_4', name: 'Sabun Mandi Nuvo', price: 3500, cost: 2700, stock: 50, status: 'active' },
+                    { id: 'prd_9', catId: 'cat_4', name: 'Sunlight Sabun Cuci 210ml', price: 5500, cost: 4500, stock: 8, status: 'critical' },
+                ];
+
+                // 3. Customers Seed
+                const firstNames = ['Bapak', 'Ibu', 'Mas', 'Mbak', 'Pak RT', 'Bu RW'];
+                const lastNames = ['Budi', 'Siti', 'Andi', 'Rina', 'Joko', 'Yanti', 'Hendra'];
+                
+                for(let i=1; i<=20; i++) {
+                    const fname = firstNames[Math.floor(Math.random() * firstNames.length)];
+                    const lname = lastNames[Math.floor(Math.random() * lastNames.length)];
+                    this.schema.customers.push({
+                        id: `cust_${i}`,
+                        name: `${fname} ${lname}`,
+                        email: `-`,
+                        phone: `08${Math.floor(Math.random()*900000000 + 100000000)}`,
+                        joinDate: new Date(Date.now() - Math.floor(Math.random()*10000000000)).toISOString(),
+                        totalSpend: 0,
+                        visitCount: 0
+                    });
+                }
+
+                // 4. Transactions Seed (Warung volume is higher but lower ticket size)
+                const txArray = [];
+                const now = new Date();
+                
+                for (let d = 60; d >= 0; d--) {
+                    let txDate = new Date(now);
+                    txDate.setDate(now.getDate() - d);
+                    
+                    let isWeekend = (txDate.getDay() === 0 || txDate.getDay() === 6);
+                    let baseVolume = isWeekend ? 55 : 35; // Warung is busy daily, 35-55 transactions
+                    let dailyTxCount = baseVolume + Math.floor(Math.random() * 15) - 5;
+
+                    let growthMultiplier = 1 + ((60 - d) * 0.005); 
+                    dailyTxCount = Math.floor(dailyTxCount * growthMultiplier);
+
+                    for (let i = 0; i < dailyTxCount; i++) {
+                        const p = this.schema.products[Math.floor(Math.random() * this.schema.products.length)];
+                        // Most buyers in a warung are unrecorded walk-ins (70% guest)
+                        const c = Math.random() > 0.7 ? this.schema.customers[Math.floor(Math.random() * this.schema.customers.length)] : null;
+                        
+                        let hour = Math.floor(Math.random() * 14) + 7; // Warung buka jam 7 pagi sampai jam 9 malam
+                        txDate.setHours(hour, Math.floor(Math.random()*60), 0);
+
+                        // Qty usually 1 to 5 pieces
+                        const qty = Math.floor(Math.random() * 4) + 1; 
+                        const subtotal = p.price * qty;
+                        const totalCost = p.cost * qty;
+                        
+                        txArray.push({
+                            id: `tx_${Utils.generateUUID()}`,
+                            timestamp: txDate.toISOString(),
+                            customerId: c ? c.id : null,
+                            items: [{ productId: p.id, name: p.name, price: p.price, qty: qty }],
+                            subtotal: subtotal,
+                            tax: 0, // No tax for warung
+                            total: subtotal,
+                            profit: subtotal - totalCost,
+                            paymentMethod: Math.random() > 0.8 ? 'QRIS' : 'Tunai'
+                        });
+
+                        if (c) {
+                            c.totalSpend += subtotal;
+                            c.visitCount += 1;
+                        }
+                    }
+                }
+                
+                this.schema.transactions = txArray.sort((a,b) => new Date(a.timestamp) - new Date(b.timestamp));
+            },
+
+            getMetrics(days = 30) {
+                const cutoff = new Date();
+                cutoff.setDate(cutoff.getDate() - days);
+                
+                const txs = this.schema.transactions.filter(t => new Date(t.timestamp) >= cutoff);
+                
+                const revenue = txs.reduce((sum, t) => sum + t.subtotal, 0);
+                const profit = txs.reduce((sum, t) => sum + t.profit, 0);
+                const count = txs.length;
+                const avgOrderValue = count > 0 ? revenue / count : 0;
+
+                const dailySeries = {};
+                for(let i=days-1; i>=0; i--) {
+                    let d = new Date(); d.setDate(d.getDate() - i);
+                    dailySeries[d.toISOString().split('T')[0]] = 0; 
+                }
+
+                txs.forEach(t => {
+                    const dStr = t.timestamp.split('T')[0];
+                    if(dailySeries[dStr] !== undefined) dailySeries[dStr] += t.subtotal;
+                });
+
+                return { revenue, profit, count, avgOrderValue, dailySeries };
+            },
+
+            getTopProducts(limit = 5) {
+                const map = {};
+                this.schema.transactions.forEach(t => {
+                    t.items.forEach(i => {
+                        if(!map[i.productId]) map[i.productId] = { name: i.name, revenue: 0, qty: 0 };
+                        map[i.productId].revenue += (i.price * i.qty);
+                        map[i.productId].qty += i.qty;
+                    });
+                });
+                return Object.values(map).sort((a,b) => b.revenue - a.revenue).slice(0, limit);
+            }
+        };
+
+        // -----------------------------------------------------------------------------
+        // MODULE 4: COMPONENT LIBRARY
+        // -----------------------------------------------------------------------------
+        const Components = {
+            StatCard: (title, value, subtitle, icon, colorClass) => `
+                <div class="kpi-card bg-white p-6 md:p-8 rounded-[32px] border border-slate-100 shadow-sm relative overflow-hidden flex flex-col justify-between h-full">
+                    <div class="flex justify-between items-start mb-6">
+                        <div class="kpi-icon-wrap w-14 h-14 rounded-2xl flex items-center justify-center text-xl bg-${colorClass}-50 text-${colorClass}-600">
+                            <i class="fas ${icon}"></i>
+                        </div>
+                        <button class="text-slate-300 hover:text-slate-500"><i class="fas fa-ellipsis-h"></i></button>
+                    </div>
+                    <div>
+                        <p class="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-1">${title}</p>
+                        <h3 class="text-3xl md:text-4xl font-black text-slate-800 tracking-tighter">${value}</h3>
+                        ${subtitle ? `<div class="mt-4 flex items-center gap-2">${subtitle}</div>` : ''}
+                    </div>
+                </div>
+            `,
+
+            Badge: (text, type = 'info') => {
+                const types = {
+                    success: 'bg-emerald-100 text-emerald-700 border-emerald-200',
+                    warning: 'bg-amber-100 text-amber-700 border-amber-200',
+                    danger: 'bg-red-100 text-red-700 border-red-200',
+                    info: 'bg-indigo-100 text-indigo-700 border-indigo-200',
+                    neutral: 'bg-slate-100 text-slate-600 border-slate-200'
+                };
+                return `<span class="px-2.5 py-1 rounded-full text-[10px] font-bold border uppercase tracking-wider ${types[type] || types.info}">${text}</span>`;
+            },
+
+            TrendIndicator: (percentage) => {
+                const isPositive = percentage >= 0;
+                const color = isPositive ? 'text-emerald-500' : 'text-red-500';
+                const bg = isPositive ? 'bg-emerald-50' : 'bg-red-50';
+                const icon = isPositive ? 'fa-arrow-trend-up' : 'fa-arrow-trend-down';
+                const sign = isPositive ? '+' : '';
+                return `
+                    <div class="flex items-center gap-1.5 px-2 py-1 rounded-lg ${bg} ${color}">
+                        <i class="fas ${icon} text-[10px]"></i>
+                        <span class="text-[11px] font-bold">${sign}${percentage.toFixed(1)}%</span>
+                    </div>
+                `;
+            },
+
+            EmptyState: (icon, title, desc, actionHtml = '') => `
+                <div class="flex flex-col items-center justify-center p-12 text-center w-full anim-scale-in">
+                    <div class="w-24 h-24 bg-slate-50 rounded-full flex items-center justify-center mb-6 text-slate-300 text-4xl shadow-inner border border-slate-100">
+                        <i class="fas ${icon}"></i>
+                    </div>
+                    <h3 class="text-xl font-black text-slate-800 tracking-tight">${title}</h3>
+                    <p class="text-sm text-slate-500 mt-2 mb-6 max-w-sm">${desc}</p>
+                    ${actionHtml}
+                </div>
+            `
+        };
+
+        // -----------------------------------------------------------------------------
+        // MODULE 5: VIEW CONTROLLERS
+        // -----------------------------------------------------------------------------
+        const Views = {
+            renderDashboard: () => {
+                const currMetrics = Database.getMetrics(30);
+                const prevMetrics = Database.getMetrics(60); 
+                
+                const oldRev = prevMetrics.revenue - currMetrics.revenue; 
+                const revTrend = Utils.calcGrowth(currMetrics.revenue, oldRev);
+                const profitTrend = Utils.calcGrowth(currMetrics.profit, (prevMetrics.profit - currMetrics.profit));
+                const orderTrend = Utils.calcGrowth(currMetrics.count, (prevMetrics.count - currMetrics.count));
+
+                const historicalVals = Object.values(currMetrics.dailySeries);
+                const ai = AIEngine.linearRegression(historicalVals, 7);
+                const nextWeekForecast = ai.forecast.reduce((a,b)=>a+b, 0);
+
+                const topProducts = Database.getTopProducts(4);
+
+                return `
+                    <div class="space-y-8 anim-slide-up">
+                        
+                        <div class="bg-gradient-to-r from-indigo-900 via-indigo-800 to-slate-900 p-8 rounded-[32px] shadow-2xl text-white relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-6 border border-indigo-700/50">
+                            <div class="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iMiIgY3k9IjIiIHI9IjEiIGZpbGw9InJnYmEoMjU1LDI1NSwyNTUsMC4wNSkiLz48L3N2Zz4=')] opacity-50 mix-blend-overlay"></div>
+                            
+                            <div class="relative z-10 flex items-center gap-6">
+                                <div class="w-16 h-16 rounded-full bg-white/10 border border-white/20 flex items-center justify-center backdrop-blur-md shrink-0">
+                                    <i class="fas fa-brain text-2xl text-indigo-300"></i>
+                                </div>
+                                <div>
+                                    <div class="flex items-center gap-3 mb-1">
+                                        <h3 class="text-xl font-black tracking-tight">Saran AI Juragan</h3>
+                                        ${Components.Badge(`Akurasi Prediksi ${ai.rSquared}%`, 'success')}
+                                    </div>
+                                    <p class="text-sm text-indigo-200 font-medium max-w-2xl leading-relaxed">
+                                        Tren jualan warung lagi ${ai.slope > 0 ? 'naik nih bos' : 'agak sepi'}. 
+                                        Kira-kira seminggu ke depan bisa dapet <strong class="text-white">${Utils.formatIDR(nextWeekForecast)}</strong>. 
+                                        Saran: ${ai.slope > 0 ? 'Segera kulakan lagi Indomie dan Beras, bakal rame!' : 'Coba rapikan etalase depan dan cek stok telur.'}.
+                                    </p>
+                                </div>
+                            </div>
+                            
+                            <div class="relative z-10 shrink-0 text-center bg-black/20 p-4 rounded-2xl border border-white/10 backdrop-blur-md">
+                                <p class="text-[10px] uppercase tracking-widest text-indigo-300 font-bold mb-1">Status Warung</p>
+                                <div class="flex items-end justify-center gap-1">
+                                    <span class="text-3xl font-black text-white">Laris</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+                            ${Components.StatCard("Omzet 30 Hari", Utils.formatCompact(currMetrics.revenue), Components.TrendIndicator(revTrend) + '<span class="text-xs text-slate-400 font-medium ml-2">vs 30H Lalu</span>', "fa-wallet", "indigo")}
+                            ${Components.StatCard("Keuntungan Bersih", Utils.formatCompact(currMetrics.profit), Components.TrendIndicator(profitTrend) + `<span class="text-xs text-slate-400 font-medium ml-2">Margin: ${Math.round((currMetrics.profit/currMetrics.revenue)*100)}%</span>`, "fa-money-bill-wave", "emerald")}
+                            ${Components.StatCard("Total Nota", currMetrics.count.toLocaleString(), Components.TrendIndicator(orderTrend), "fa-receipt", "amber")}
+                            ${Components.StatCard("Rata-rata Belanja", Utils.formatIDR(currMetrics.avgOrderValue), '', "fa-basket-shopping", "rose")}
+                        </div>
+
+                        <div class="grid grid-cols-1 xl:grid-cols-3 gap-8">
+                            
+                            <div class="xl:col-span-2 bg-white p-8 rounded-[32px] border border-slate-100 shadow-sm flex flex-col">
+                                <div class="flex justify-between items-center mb-8">
+                                    <div>
+                                        <h4 class="text-lg font-black text-slate-800 tracking-tight">Grafik Omzet & Prediksi</h4>
+                                        <p class="text-xs text-slate-400 font-medium mt-1">Garis putus-putus adalah prediksi AI.</p>
+                                    </div>
+                                    <div class="flex gap-2 bg-slate-50 p-1 rounded-xl border border-slate-100">
+                                        <button class="px-3 py-1.5 bg-white shadow-sm rounded-lg text-xs font-bold text-slate-700">Harian</button>
+                                    </div>
+                                </div>
+                                <div class="flex-1 relative min-h-[300px] w-full">
+                                    <canvas id="main-revenue-chart"></canvas>
+                                </div>
+                            </div>
+
+                            <div class="bg-white p-8 rounded-[32px] border border-slate-100 shadow-sm flex flex-col">
+                                <div class="flex justify-between items-center mb-8">
+                                    <h4 class="text-lg font-black text-slate-800 tracking-tight">Barang Terlaris</h4>
+                                    <button class="text-indigo-600 text-xs font-bold hover:underline">Lihat Semua</button>
+                                </div>
+                                <div class="space-y-6 flex-1">
+                                    ${topProducts.map((p, index) => `
+                                        <div class="flex items-center gap-4 group">
+                                            <div class="w-10 h-10 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center font-black text-slate-400 group-hover:bg-indigo-50 group-hover:text-indigo-600 group-hover:border-indigo-100 transition-colors">
+                                                ${index + 1}
+                                            </div>
+                                            <div class="flex-1 min-w-0">
+                                                <p class="text-sm font-bold text-slate-800 truncate">${p.name}</p>
+                                                <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wide">${p.qty} Terjual</p>
+                                            </div>
+                                            <div class="text-right">
+                                                <p class="text-sm font-black text-slate-800">${Utils.formatCompact(p.revenue)}</p>
+                                            </div>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                `;
+            },
+
+            renderCRM: () => {
+                const segmentedCustomers = AIEngine.segmentCustomers(Database.schema.customers, 3);
+                
+                const clusters = { 'Jarang Belanja': 0, 'Pelanggan Biasa': 0, 'Juragan (Sering Hutang/Borong)': 0 };
+                segmentedCustomers.forEach(c => { if(clusters[c.segment] !== undefined) clusters[c.segment]++; });
+
+                return `
+                    <div class="space-y-8 anim-slide-up">
+                        <div class="flex justify-between items-end">
+                            <div>
+                                <h2 class="text-2xl font-black text-slate-800 tracking-tight">Buku Pelanggan (CRM Warung)</h2>
+                                <p class="text-sm text-slate-500 font-medium mt-1">Mengelompokkan pelanggan otomatis berdasarkan total belanjanya.</p>
+                            </div>
+                            <button class="bg-white border border-slate-200 text-slate-700 px-4 py-2 rounded-xl text-sm font-bold shadow-sm hover:bg-slate-50 transition flex items-center gap-2">
+                                <i class="fas fa-book"></i> Rekap Bon
+                            </button>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            ${Components.StatCard("Kelas Juragan", clusters['Juragan (Sering Hutang/Borong)'], "Paling sering jajan", "fa-crown", "amber")}
+                            ${Components.StatCard("Pelanggan Biasa", clusters['Pelanggan Biasa'], "Belanja harian rutin", "fa-user", "slate")}
+                            ${Components.StatCard("Jarang Belanja", clusters['Jarang Belanja'], "Kadang-kadang doang", "fa-user-clock", "rose")}
+                        </div>
+
+                        <div class="bg-white rounded-[32px] border border-slate-100 shadow-sm overflow-hidden flex flex-col">
+                            <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+                                <h4 class="font-black text-slate-800">Daftar Warga</h4>
+                                <input type="text" placeholder="Cari nama warga..." class="bg-white border border-slate-200 rounded-lg px-3 py-1.5 text-xs outline-none focus:border-indigo-500 w-64">
+                            </div>
+                            <div class="overflow-x-auto">
+                                <table class="w-full data-table text-left border-collapse">
+                                    <thead>
+                                        <tr>
+                                            <th>Nama Pelanggan</th>
+                                            <th>Kontak</th>
+                                            <th>Total Belanja</th>
+                                            <th>Total Mampir</th>
+                                            <th>Kategori Warga</th>
+                                            <th class="text-center">Aksi</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        ${segmentedCustomers.sort((a,b)=>b.totalSpend - a.totalSpend).slice(0, 15).map(c => {
+                                            let badgeType = c.segment.includes('Juragan') ? 'warning' : (c.segment.includes('Biasa') ? 'neutral' : 'danger');
+                                            return `
+                                            <tr>
+                                                <td><p class="font-bold text-slate-800">${c.name}</p></td>
+                                                <td><p class="text-[10px] font-mono text-slate-400">${c.phone}</p></td>
+                                                <td class="font-black text-slate-800">${Utils.formatIDR(c.totalSpend)}</td>
+                                                <td><span class="bg-slate-100 text-slate-600 px-2 py-1 rounded font-bold text-xs">${c.visitCount}x</span></td>
+                                                <td>${Components.Badge(c.segment, badgeType)}</td>
+                                                <td class="text-center">
+                                                    <button class="w-8 h-8 bg-slate-50 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition"><i class="fas fa-book-open"></i></button>
+                                                </td>
+                                            </tr>
+                                        `}).join('')}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            },
+
+            renderInventory: () => {
+                const prods = Database.schema.products;
+                const totalValue = prods.reduce((sum, p) => sum + (p.cost * p.stock), 0);
+                const lowStock = prods.filter(p => p.stock < 15).length;
+
+                return `
+                    <div class="space-y-8 anim-slide-up">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            ${Components.StatCard("Macam Barang", prods.length, "SKU Aktif di Etalase", "fa-boxes-stacked", "indigo")}
+                            ${Components.StatCard("Modal Barang (Aset)", Utils.formatIDR(totalValue), "Nilai sisa stok warung", "fa-vault", "emerald")}
+                            ${Components.StatCard("Barang Mau Habis", lowStock, "Harus buruan kulakan!", "fa-triangle-exclamation", "red")}
+                        </div>
+
+                        <div class="bg-white rounded-[32px] border border-slate-100 shadow-sm overflow-hidden flex flex-col">
+                            <div class="p-6 border-b border-slate-100 flex justify-between items-center">
+                                <h4 class="font-black text-slate-800">Daftar Barang Dagangan</h4>
+                                <button class="bg-slate-900 text-white px-4 py-2 rounded-xl text-xs font-bold shadow-md hover:bg-slate-800 transition"><i class="fas fa-plus mr-1"></i> Tambah Barang</button>
+                            </div>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 p-6">
+                                ${prods.map(p => {
+                                    const stockStatus = p.stock > 30 ? 'success' : (p.stock > 10 ? 'warning' : 'danger');
+                                    const stockLabel = p.stock > 30 ? 'Aman' : (p.stock > 10 ? 'Menipis' : 'Kritis');
+                                    return `
+                                    <div class="border border-slate-100 rounded-2xl p-5 hover:border-indigo-200 hover:shadow-lg transition-all group flex flex-col">
+                                        <div class="flex justify-between items-start mb-4">
+                                            <div class="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center text-slate-400 group-hover:bg-indigo-50 group-hover:text-indigo-600 transition"><i class="fas fa-box"></i></div>
+                                            ${Components.Badge(stockLabel, stockStatus)}
+                                        </div>
+                                        <h5 class="font-bold text-slate-800 text-sm leading-tight mb-1">${p.name}</h5>
+                                        
+                                        <div class="mt-auto pt-4 border-t border-slate-50 flex justify-between items-end">
+                                            <div>
+                                                <p class="text-[9px] uppercase font-bold text-slate-400">Harga Jual</p>
+                                                <p class="font-black text-sm text-slate-800">${Utils.formatIDR(p.price)}</p>
+                                            </div>
+                                            <div class="text-right">
+                                                <p class="text-[9px] uppercase font-bold text-slate-400">Sisa Stok</p>
+                                                <p class="font-black text-lg ${p.stock < 10 ? 'text-red-500' : 'text-slate-800'}">${p.stock}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                `}).join('')}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+        };
+
+        // -----------------------------------------------------------------------------
+        // MODULE 6: CORE APPLICATION CONTROLLER
+        // -----------------------------------------------------------------------------
+        const Core = {
+            state: {
+                currentRoute: 'dashboard',
+                chartInstances: {}
+            },
+
+            async boot() {
+                const progress = document.getElementById('splash-progress');
+                progress.style.width = '30%';
+                await Utils.sleep(400);
+                
+                const dbStatus = await Database.init();
+                if(!dbStatus) alert("Gagal memuat Database Lokal Warung.");
+                
+                progress.style.width = '70%';
+                document.getElementById('splash-text').innerText = "Menghitung Stok Sembako...";
+                await Utils.sleep(500);
+
+                this.UI.buildSidebar();
+                this.Router.navigate('dashboard', false);
+                
+                progress.style.width = '100%';
+                await Utils.sleep(300);
+
+                const splash = document.getElementById('splash-screen');
+                const appWrapper = document.getElementById('app-wrapper');
+                splash.style.opacity = '0';
+                splash.style.visibility = 'hidden';
+                appWrapper.style.opacity = '1';
+
+                document.getElementById('mobile-toggle').addEventListener('click', () => {
+                    const sidebar = document.querySelector('.sidebar-container');
+                    if(sidebar.style.transform === 'translateX(0px)') {
+                        sidebar.style.transform = 'translateX(-100%)';
+                    } else {
+                        sidebar.style.transform = 'translateX(0px)';
+                        sidebar.style.zIndex = '99';
+                    }
+                });
+            },
+
+            Router: {
+                routes: ['dashboard', 'crm', 'inventory', 'settings'],
+                navigate(routeId, withAnimation = true) {
+                    if (!this.routes.includes(routeId)) return;
+                    
+                    Core.state.currentRoute = routeId;
+                    
+                    document.querySelectorAll('.sidebar-link').forEach(el => el.classList.remove('active'));
+                    const activeLink = document.getElementById(`nav-${routeId}`);
+                    if(activeLink) activeLink.classList.add('active');
+
+                    let pageTitle = routeId === 'crm' ? 'Buku Warga' : (routeId === 'inventory' ? 'Gudang Sembako' : routeId);
+                    document.getElementById('page-title').innerText = pageTitle;
+
+                    const viewContainer = document.getElementById('router-view');
+                    
+                    if(withAnimation) {
+                        viewContainer.innerHTML = `<div class="w-full h-64 flex items-center justify-center"><div class="spinner-ring"></div></div>`;
+                    }
+
+                    setTimeout(() => {
+                        if (Core.state.chartInstances.main) {
+                            Core.state.chartInstances.main.destroy();
+                            delete Core.state.chartInstances.main;
+                        }
+
+                        let html = '';
+                        switch(routeId) {
+                            case 'dashboard': html = Views.renderDashboard(); break;
+                            case 'crm': html = Views.renderCRM(); break;
+                            case 'inventory': html = Views.renderInventory(); break;
+                            default: html = Components.EmptyState('fa-person-digging', 'Lagi Dibangun', 'Fitur ini lagi dibikin sama kuli bangunan digital.');
+                        }
+                        
+                        viewContainer.innerHTML = html;
+
+                        if (routeId === 'dashboard') Core.UI.Charts.renderDashboardChart();
+
+                    }, withAnimation ? 300 : 0);
+                }
+            },
+
+            UI: {
+                buildSidebar() {
+                    const navItems = [
+                        { id: 'dashboard', icon: 'fa-chart-pie', text: 'Buku Warung' },
+                        { id: 'crm', icon: 'fa-users', text: 'Catatan Warga' },
+                        { id: 'inventory', icon: 'fa-boxes-stacked', text: 'Stok Etalase' },
+                        { id: 'settings', icon: 'fa-sliders', text: 'Pengaturan' }
+                    ];
+
+                    const container = document.getElementById('nav-container');
+                    container.innerHTML = `
+                        <p class="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-4 ml-4">Menu Utama</p>
+                        ${navItems.map(item => `
+                            <a href="#" id="nav-${item.id}" onclick="Core.Router.navigate('${item.id}')" class="sidebar-link flex items-center gap-4 px-4 py-3 rounded-xl mb-1 text-sm font-bold">
+                                <i class="fas ${item.icon} w-5 text-center text-slate-400"></i>
+                                <span>${item.text}</span>
+                            </a>
+                        `).join('')}
+                    `;
+                },
+
+                Toast: {
+                    show(message, type = 'info') {
+                        const root = document.getElementById('toast-root');
+                        const id = `toast_${Utils.generateUUID()}`;
+                        
+                        let bg = 'bg-slate-800'; let icon = 'fa-info-circle';
+                        if(type==='success') { bg = 'bg-emerald-600'; icon = 'fa-check-circle'; }
+                        if(type==='error') { bg = 'bg-red-600'; icon = 'fa-triangle-exclamation'; }
+
+                        const el = Utils.createElement('div', `${bg} text-white p-4 rounded-2xl shadow-2xl flex items-center gap-3 anim-slide-up pointer-events-auto`, `
+                            <i class="fas ${icon}"></i>
+                            <p class="text-sm font-bold flex-1">${message}</p>
+                            <button onclick="document.getElementById('${id}').remove()" class="text-white/50 hover:text-white"><i class="fas fa-times"></i></button>
+                        `);
+                        el.id = id;
+                        root.appendChild(el);
+
+                        setTimeout(() => {
+                            const t = document.getElementById(id);
+                            if(t) {
+                                t.style.animation = 'fadeOut 0.3s ease forwards';
+                                setTimeout(()=> t.remove(), 300);
+                            }
+                        }, 4000);
+                    }
+                },
+
+                Modal: {
+                    open(modalType) {
+                        const root = document.getElementById('modal-root');
+                        const body = document.getElementById('modal-body');
+                        
+                        root.classList.remove('hidden');
+                        root.classList.add('flex');
+                        setTimeout(() => {
+                            root.classList.remove('opacity-0');
+                            body.classList.remove('scale-95');
+                        }, 10);
+
+                        if (modalType === 'new_transaction') {
+                            const prods = Database.schema.products.filter(p => p.status === 'active' && p.stock > 0);
+                            body.innerHTML = `
+                                <div class="bg-slate-50 p-6 md:p-8 border-b border-slate-200 flex justify-between items-center">
+                                    <div>
+                                        <h3 class="text-2xl font-black text-slate-800">Kasir Warung</h3>
+                                        <p class="text-xs text-slate-500 font-bold mt-1 uppercase tracking-widest">Entri Penjualan</p>
+                                    </div>
+                                    <button onclick="Core.UI.Modal.close()" class="w-10 h-10 rounded-full bg-white border border-slate-200 text-slate-400 hover:text-red-500 hover:border-red-200 transition flex items-center justify-center shadow-sm">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                                <div class="p-6 md:p-8 overflow-y-auto custom-scroll">
+                                    <form id="tx-form" class="space-y-6">
+                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                            <div>
+                                                <label class="form-label">Pilih Barang</label>
+                                                <select id="inp-prod" class="form-input" required>
+                                                    <option value="" disabled selected>-- Cari di etalase --</option>
+                                                    ${prods.map(p => `<option value="${p.id}">${p.name} (${Utils.formatIDR(p.price)})</option>`).join('')}
+                                                </select>
+                                            </div>
+                                            <div>
+                                                <label class="form-label">Banyaknya</label>
+                                                <input type="number" id="inp-qty" class="form-input" min="1" value="1" required>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <label class="form-label">Nama Pembeli (Kalo warga sini)</label>
+                                            <select id="inp-cust" class="form-input">
+                                                <option value="">Orang Lewat / Gak Kenal</option>
+                                                ${Database.schema.customers.slice(0,20).map(c => `<option value="${c.id}">${c.name}</option>`).join('')}
+                                            </select>
+                                        </div>
+                                    </form>
+                                </div>
+                                <div class="p-6 bg-slate-50 border-t border-slate-200 flex justify-end gap-3">
+                                    <button onclick="Core.UI.Modal.close()" class="px-6 py-3 rounded-xl font-bold text-slate-600 hover:bg-slate-200 transition">Batal</button>
+                                    <button onclick="Core.handleTransactionSubmit()" class="px-8 py-3 bg-indigo-600 text-white rounded-xl font-black shadow-lg shadow-indigo-200 hover:bg-indigo-700 transition">Bayar & Cetak Nota</button>
+                                </div>
+                            `;
+                        }
+                    },
+                    close() {
+                        const root = document.getElementById('modal-root');
+                        const body = document.getElementById('modal-body');
+                        
+                        root.classList.add('opacity-0');
+                        body.classList.add('scale-95');
+                        
+                        setTimeout(() => {
+                            root.classList.add('hidden');
+                            root.classList.remove('flex');
+                            body.innerHTML = '';
+                        }, 300);
+                    }
+                },
+
+                Charts: {
+                    renderDashboardChart() {
+                        const canvas = document.getElementById('main-revenue-chart');
+                        if(!canvas) return;
+                        
+                        const ctx = canvas.getContext('2d');
+                        const metrics = Database.getMetrics(30);
+                        const labels = Object.keys(metrics.dailySeries).map(d => d.slice(5)); // just show MM-DD
+                        const dataReal = Object.values(metrics.dailySeries);
+                        
+                        const ai = AIEngine.linearRegression(dataReal, 7);
+                        const aiDataPoints = [];
+                        for(let i=0; i<dataReal.length; i++) {
+                            aiDataPoints.push(Math.round(ai.intercept + ai.slope * i));
+                        }
+                        for(let j=0; j<7; j++) {
+                            labels.push(`H+${j+1}`);
+                            dataReal.push(null); 
+                            aiDataPoints.push(ai.forecast[j]);
+                        }
+
+                        const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+                        gradient.addColorStop(0, 'rgba(79, 70, 229, 0.2)');
+                        gradient.addColorStop(1, 'rgba(79, 70, 229, 0)');
+
+                        Core.state.chartInstances.main = new Chart(ctx, {
+                            type: 'line',
+                            data: {
+                                labels: labels,
+                                datasets: [
+                                    {
+                                        label: 'Omzet Asli',
+                                        data: dataReal,
+                                        borderColor: '#4f46e5',
+                                        borderWidth: 3,
+                                        tension: 0.4,
+                                        fill: true,
+                                        backgroundColor: gradient,
+                                        pointBackgroundColor: '#ffffff',
+                                        pointBorderColor: '#4f46e5',
+                                        pointBorderWidth: 2,
+                                        pointRadius: 4,
+                                        pointHoverRadius: 6
+                                    },
+                                    {
+                                        label: 'Ramalan AI',
+                                        data: aiDataPoints,
+                                        borderColor: '#10b981',
+                                        borderWidth: 2,
+                                        borderDash: [5, 5],
+                                        tension: 0.4,
+                                        pointRadius: 0,
+                                        fill: false
+                                    }
+                                ]
+                            },
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                interaction: { mode: 'index', intersect: false },
+                                plugins: {
+                                    legend: { position: 'top', align: 'end', labels: { boxWidth: 10, usePointStyle: true, font: { family: "'Inter', sans-serif", weight: 'bold', size: 11 } } },
+                                    tooltip: { backgroundColor: '#0f172a', titleFont: { family: "'Inter'", size: 13 }, bodyFont: { family: "'Inter'", size: 12 }, padding: 12, cornerRadius: 8, callbacks: { label: function(context) { let label = context.dataset.label || ''; if (label) label += ': '; if (context.parsed.y !== null) label += new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(context.parsed.y); return label; } } }
+                                },
+                                scales: {
+                                    y: { beginAtZero: true, grid: { color: '#f1f5f9', drawBorder: false }, ticks: { font: { family: "'Inter'", size: 10, weight: 'bold' }, color: '#94a3b8', callback: function(value) { return Utils.formatCompact(value); } } },
+                                    x: { grid: { display: false, drawBorder: false }, ticks: { font: { family: "'Inter'", size: 10, weight: 'bold' }, color: '#94a3b8', maxTicksLimit: 15 } }
+                                }
+                            }
+                        });
+                    }
+                }
+            },
+
+            handleTransactionSubmit() {
+                const pId = document.getElementById('inp-prod').value;
+                const qty = parseInt(document.getElementById('inp-qty').value);
+                const cId = document.getElementById('inp-cust').value;
+
+                if (!pId || !qty || qty < 1) {
+                    Core.UI.Toast.show('Data salah. Cek lagi bos inputannya.', 'error');
+                    return;
+                }
+
+                const product = Database.schema.products.find(p => p.id === pId);
+                const customer = cId ? Database.schema.customers.find(c => c.id === cId) : null;
+
+                if (product.stock < qty) {
+                    Core.UI.Toast.show(`Stok abis bos! Sisa di gudang tinggal: ${product.stock}`, 'error');
+                    return;
+                }
+
+                const subtotal = product.price * qty;
+                const profit = subtotal - (product.cost * qty);
+                const total = subtotal; // No tax in warung
+
+                const tx = {
+                    id: `tx_${Utils.generateUUID()}`,
+                    timestamp: new Date().toISOString(),
+                    customerId: cId || null,
+                    items: [{ productId: product.id, name: product.name, price: product.price, qty: qty }],
+                    subtotal: subtotal,
+                    tax: 0,
+                    total: total,
+                    profit: profit,
+                    paymentMethod: 'Tunai'
+                };
+
+                Database.schema.transactions.push(tx);
+                product.stock -= qty;
+                if(customer) {
+                    customer.totalSpend += total;
+                    customer.visitCount += 1;
+                }
+
+                Database.save();
+                Core.UI.Modal.close();
+                Core.UI.Toast.show('Alhamdulillah Laku! Bon berhasil dicatat.', 'success');
+                Core.Router.navigate(Core.state.currentRoute, false); 
+            }
+        };
+
+        // --- Execute Application ---
+        document.addEventListener('DOMContentLoaded', () => {
+            Core.boot().catch(err => {
+                console.error("Critical System Failure:", err);
+                document.body.innerHTML = `<div style="padding:50px;font-family:sans-serif;text-align:center;color:red;"><h1>Sistem Warung Eror Bos</h1><p>${err.message}</p></div>`;
+            });
+        });
+
+    </script>
+</body>
+</html>
